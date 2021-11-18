@@ -1,0 +1,8 @@
+tensorflow==2.6.0
+streamlit==1.1.0
+tensorflow_datasets==4.4.0
+numpy==1.19.5
+matplotlib==3.3.4
+ipywidgets==7.6.3
+Pillow==8.4.0
+voila==0.2.16
