@@ -19,7 +19,7 @@ cd Imagenette_classification
 voila Deploy_with_voila.ipynb
 ```
 
-#### With streamlit
+#### With `streamlit`
 
 ```
 streamlit run app.py
