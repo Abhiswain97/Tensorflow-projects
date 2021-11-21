@@ -17,16 +17,19 @@ idx2label = {
     9: "parachute"
 }
 
-st.title("Imagenette classifier")
+st.markdown("<html><h1><center>Imagenette classifier</center></h1></html>",
+            unsafe_allow_html=True)
 
+st.markdown("<p>Currently classification supported for the follwing classes.</p>",
+            unsafe_allow_html=True)
 st.write(idx2label)
 
 image = st.file_uploader("Upload an image!", type=['jpg', 'png'])
 
-model = tf.keras.models.load_model("best.hdf5")
 
-
+@st.cache
 def predict(image):
+    model = tf.keras.models.load_model("best.hdf5")
     image = tf.image.resize(image, (160, 160))
     batch = tf.expand_dims(image, 0)
     res = model(batch)
