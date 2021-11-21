@@ -27,7 +27,6 @@ st.write(idx2label)
 image = st.file_uploader("Upload an image!", type=['jpg', 'png'])
 
 
-@st.cache
 def predict(image):
     model = tf.keras.models.load_model("best.hdf5")
     image = tf.image.resize(image, (160, 160))
