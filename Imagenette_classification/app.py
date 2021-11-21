@@ -2,7 +2,8 @@ import streamlit as st
 import tensorflow as tf
 from PIL import Image
 import numpy as np
-import io
+import requests
+from io import BytesIO
 
 idx2label = {
     0: "tench",
@@ -17,15 +18,6 @@ idx2label = {
     9: "parachute"
 }
 
-st.markdown("<html><h1><center>Imagenette classifier</center></h1></html>",
-            unsafe_allow_html=True)
-
-st.markdown("<p>Currently classification supported for the follwing classes.</p>",
-            unsafe_allow_html=True)
-st.write(idx2label)
-
-image = st.file_uploader("Upload an image!", type=['jpg', 'png'])
-
 
 def predict(image):
     model = tf.keras.models.load_model("best.hdf5")
@@ -35,17 +27,69 @@ def predict(image):
     return idx2label[tf.argmax(res[0]).numpy()], tf.sigmoid(res[0])[tf.argmax(res[0]).numpy()].numpy()
 
 
-if(image is not None):
-    pred, confidence = "", 0
-    with st.spinner("Classifying..."):
-        img = Image.open(image)
-        img = np.array(img)
+st.markdown("<html><h1><center>Imagenette classifier</center></h1></html>",
+            unsafe_allow_html=True)
 
-        res = tf.convert_to_tensor(img, dtype=tf.float32)
+labels = list(idx2label.values())
 
-        with tf.device("/CPU:0"):
-            conf_idx = tf.argmax(tf.sigmoid(res[0]))
-            pred, confidence = predict(res)
 
-    st.success(f"It's a {pred} with a confidence of {confidence * 100:.4f}%")
-    st.image(img, use_column_width=True)
+res = st.sidebar.selectbox("Image from?", options=["URL", "Local"])
+
+if res == "Local":
+
+    st.markdown("<html><h2><center>Upload an image</center></h2></html>",
+                unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader(label='', type=["jpg", "png"])
+
+    bt = st.button("Predict")
+
+    if(uploaded_file is not None):
+        st.image(uploaded_file, use_column_width=True)
+        pred, confidence = "", 0
+        if bt:
+            with st.spinner("Classifying..."):
+                img = Image.open(uploaded_file)
+                img = np.array(img)
+
+                res = tf.convert_to_tensor(img, dtype=tf.float32)
+
+                with tf.device("/CPU:0"):
+                    conf_idx = tf.argmax(tf.sigmoid(res[0]))
+                    pred, confidence = predict(res)
+
+            st.success(
+                f"It's a {pred} with a confidence of {confidence * 100:.4f}%")
+
+else:
+    # get image from URL
+    st.markdown("<html><h2><center>Enter an image URL</center></h2></html>",
+                unsafe_allow_html=True)
+
+    url = st.text_input("Image URL")
+    bt = st.button("Predict")
+
+    if url:
+        st.image(url, use_column_width=True)
+        pred, confidence = "", 0
+        if bt:
+            with st.spinner("Classifying..."):
+                img = requests.get(url).content
+                img = Image.open(BytesIO(img))
+                img = np.array(img)
+
+                res = tf.convert_to_tensor(img, dtype=tf.float32)
+
+                with tf.device("/CPU:0"):
+                    conf_idx = tf.argmax(tf.sigmoid(res[0]))
+                    pred, confidence = predict(res)
+
+            st.success(
+                f"It's a {pred} with a confidence of {confidence * 100:.4f}%")
+
+st.sidebar.markdown(f"<p>Currently classification supported for the follwing classes below</p>",
+                    unsafe_allow_html=True)
+
+# Create a unordered list from the labels
+st.sidebar.markdown(f"<ul>{''.join(['<li>{}</li>'.format(label) for label in labels])}</ul>",
+                    unsafe_allow_html=True)
