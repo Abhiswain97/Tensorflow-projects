@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 import requests
 from io import BytesIO
+import time
 
 idx2label = {
     0: "tench",
@@ -24,6 +25,10 @@ def predict(image):
     image = tf.image.resize(image, (160, 160))
     batch = tf.expand_dims(image, 0)
     res = model(batch)
+    my_bar = st.progress(0)
+    for precent in range(100):
+        time.sleep(0.01)
+        my_bar.progress(precent + 1)
     return idx2label[tf.argmax(res[0]).numpy()], tf.sigmoid(res[0])[tf.argmax(res[0]).numpy()].numpy()
 
 
