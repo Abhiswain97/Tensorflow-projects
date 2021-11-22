@@ -19,9 +19,11 @@ idx2label = {
     9: "parachute"
 }
 
+model = tf.keras.models.load_model("best.hdf5")
+st.write(model)
+
 
 def predict(image):
-    model = tf.keras.models.load_model("best.hdf5")
     image = tf.image.resize(image, (160, 160))
     batch = tf.expand_dims(image, 0)
     res = model(batch)
