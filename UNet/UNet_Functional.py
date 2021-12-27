@@ -68,7 +68,7 @@ def unet(inputs_shape=(256, 256, 1), num_classes=1):
     bottleneck = double_conv(inputs=x, filter_size=1024)
     outputs = decoder_block(inputs=bottleneck, filters=reversed(all_filters))
 
-    outputs = layers.Conv2D(filters=num_classes, kernel_size=1, padding='same')(outputs)
+    outputs = layers.Conv2D(filters=num_classes, kernel_size=1, padding='same', activation='sigmoid')(outputs)
 
     model = keras.Model(inputs, outputs)
 
