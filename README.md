@@ -28,7 +28,7 @@ streamlit run app.py
 ## 2. UNet from scratch
 
 <p align="center">
-  <img src="Unet.png" height="300" width="300">
+  <img src="https://github.com/Abhiswain97/Tensorflow-projects/blob/main/UNet/Unet.png">
 </p>
 
 Implementation of Unet from scratch. \
