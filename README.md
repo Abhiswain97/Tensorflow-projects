@@ -24,3 +24,16 @@ voila Deploy_with_voila.ipynb
 ```
 streamlit run app.py
 ```
+
+## 2. UNet from scratch
+
+Implementation of Unet from scratch
+
+### How to run ?
+
+```
+pip install -r requirements.txt
+python Unet.py
+```
+
+

@@ -20,8 +20,6 @@ idx2label = {
 }
 
 model = tf.keras.models.load_model("best.hdf5")
-st.write(model)
-
 
 def predict(image):
     image = tf.image.resize(image, (160, 160))
