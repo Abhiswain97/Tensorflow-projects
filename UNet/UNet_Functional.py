@@ -20,8 +20,10 @@ def double_conv(inputs, filter_size, add_skip=True):
     :param filter_size: number of 3x3 filters
     :return: the transformed inputs
     """
-    conv1 = layers.Conv2D(filters=filter_size, kernel_size=3, padding='same', activation='relu')(inputs)
-    conv2 = layers.Conv2D(filters=filter_size, kernel_size=3, padding='same', activation='relu')(conv1)
+    conv1 = layers.Conv2D(filters=filter_size, kernel_size=3,
+                          padding='same', activation='relu')(inputs)
+    conv2 = layers.Conv2D(filters=filter_size, kernel_size=3,
+                          padding='same', activation='relu')(conv1)
 
     if add_skip and filter_size != 1024:
         skip_cons.append(conv2)
@@ -51,9 +53,9 @@ def decoder_block(inputs, filters):
     :param filters: number of filters
     :return: the output of the decoder block
     """
-    upsample_layer = layers.UpSampling2D(size=(2, 2))
     for filter in filters:
-        inputs = layers.Conv2D(filters=filter, kernel_size=3, padding='same', activation='relu')(upsample_layer(inputs))
+        inputs = layers.Conv2DTranspose(
+            filters=filter, kernel_size=2, padding='same', activation='relu', strides=(2, 2))(inputs)
         skp = skip_cons.pop()
         inputs = layers.concatenate([skp, inputs], axis=3)
         inputs = double_conv(inputs=inputs, filter_size=filter, add_skip=False)
@@ -68,7 +70,8 @@ def unet(inputs_shape=(256, 256, 1), num_classes=1):
     bottleneck = double_conv(inputs=x, filter_size=1024)
     outputs = decoder_block(inputs=bottleneck, filters=reversed(all_filters))
 
-    outputs = layers.Conv2D(filters=num_classes, kernel_size=1, padding='same', activation='sigmoid')(outputs)
+    outputs = layers.Conv2D(filters=num_classes, kernel_size=1,
+                            padding='same', activation='softmax')(outputs)
 
     model = keras.Model(inputs, outputs)
 
@@ -86,9 +89,9 @@ if __name__ == "__main__":
         metrics=['accuracy']
     )
 
-    print(model.summary())
-
     X = np.random.rand(1, *image_shape)
     y = np.random.rand(1, *image_shape)
 
     model.fit(X, y)
+
+    model.summary()

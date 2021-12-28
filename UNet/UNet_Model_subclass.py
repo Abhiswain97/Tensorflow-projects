@@ -1,8 +1,12 @@
-from tensorflow.keras import Model, layers
+from tensorflow import keras
+from tensorflow.keras import Model, layers, losses, metrics
 import numpy as np
 import tensorflow as tf
+import os
 
 tf.config.run_functions_eagerly(True)
+tf.data.experimental.enable_debug_mode()
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class UNet(Model):
@@ -21,8 +25,10 @@ class UNet(Model):
         :param filter_size: number of 3x3 filters
         :return: the transformed inputs
         """
-        conv1 = layers.Conv2D(filters=filter_size, kernel_size=3, padding='same', activation='relu')(inputs)
-        conv2 = layers.Conv2D(filters=filter_size, kernel_size=3, padding='same', activation='relu')(conv1)
+        conv1 = layers.Conv2D(filters=filter_size, kernel_size=3,
+                              padding='same', activation='relu')(inputs)
+        conv2 = layers.Conv2D(filters=filter_size, kernel_size=3,
+                              padding='same', activation='relu')(conv1)
 
         if add_skip and filter_size != 1024:
             self.skip_cons.append(conv2)
@@ -40,7 +46,8 @@ class UNet(Model):
         """
         for filter in filters:
             inputs = self.double_conv(inputs, filter_size=filter)
-            inputs = layers.MaxPooling2D(pool_size=(2, 2), padding='same')(inputs)
+            inputs = layers.MaxPooling2D(
+                pool_size=(2, 2), padding='same')(inputs)
         return inputs
 
     def decoder_block(self, inputs, filters):
@@ -50,38 +57,51 @@ class UNet(Model):
         :param filters: number of filters
         :return: the output of the decoder block
         """
-        upsample_layer = layers.UpSampling2D(size=(2, 2))
         for filter in filters:
-            inputs = layers.Conv2D(filters=filter, kernel_size=3, padding='same', activation='relu')(
-                upsample_layer(inputs))
+            inputs = layers.Conv2DTranspose(
+                filters=filter, kernel_size=2, padding='same', strides=(2, 2))(inputs)
             skp = self.skip_cons.pop()
+            print(inputs.shape, skp.shape)
             inputs = layers.concatenate([skp, inputs], axis=3)
-            inputs = self.double_conv(inputs=inputs, filter_size=filter, add_skip=False)
+            inputs = self.double_conv(
+                inputs=inputs, filter_size=filter, add_skip=False)
 
         return inputs
 
     def call(self, inputs, **kwargs):
         x = self.encoder_block(inputs=inputs, filters=self.filters)
         bottleneck = self.double_conv(inputs=x, filter_size=1024)
-        outputs = self.decoder_block(inputs=bottleneck, filters=reversed(self.filters))
+        outputs = self.decoder_block(
+            inputs=bottleneck, filters=reversed(self.filters))
 
-        outputs = layers.Conv2D(filters=self.num_classes, kernel_size=1, padding='same', activation='sigmoid')(outputs)
+        outputs = layers.Conv2D(filters=self.num_classes,
+                                kernel_size=1, padding='same')(outputs)
 
         return outputs
+
+    def summary(self):
+        x = layers.Input(shape=(256, 256, 1))
+        model = keras.Model(x, self.call(x))
+        return model.summary()
 
 
 if __name__ == "__main__":
     image_shape = (256, 256, 1)
 
-    model = UNet(num_classes=1)
+    model = UNet(num_classes=10)
 
     model.compile(
         optimizer='adam',
-        loss='binary_crossentropy',
-        metrics=['accuracy']
+        loss=losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[metrics.SparseCategoricalAccuracy()]
     )
 
-    X = np.random.rand(1, *image_shape)
-    y = np.random.rand(1, *image_shape)
+    model.build(input_shape=(1, *image_shape))
+    model.summary()
 
-    model.fit(X, y)
+    # X = np.random.rand(1, *image_shape)
+    # y = np.random.rand(1, *image_shape)
+
+    # model.fit(X, y, batch_size=1)
+
+    # model.summary()
