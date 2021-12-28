@@ -31,14 +31,15 @@ streamlit run app.py
   <img src="https://github.com/Abhiswain97/Tensorflow-projects/blob/main/UNet/Unet.png">
 </p>
 
+Paper: [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
+
 Implementation of Unet from scratch.
 - `UNet_Functional.py` contains the keras functional API implementation
-- `UNet_Model_subclass.py` contains the implementation using keras Model class
-
 
 ### How to run ?
 
 ```
+cd UNet
 pip install -r requirements.txt
 ```
 
