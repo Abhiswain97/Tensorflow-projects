@@ -65,13 +65,15 @@ def decoder_block(inputs, filters):
 
 def unet(inputs_shape=(256, 256, 1), num_classes=1):
     all_filters = [64, 128, 256, 512]
+
     inputs = layers.Input(shape=inputs_shape)
-    x = encoder_block(inputs=inputs, filters=all_filters)
+    scale = layers.Lambda(lambda x: x / 255)(inputs)
+    x = encoder_block(inputs=scale, filters=all_filters)
     bottleneck = double_conv(inputs=x, filter_size=1024)
     outputs = decoder_block(inputs=bottleneck, filters=reversed(all_filters))
 
-    outputs = layers.Conv2D(filters=num_classes, kernel_size=1,
-                            padding='same', activation='softmax')(outputs)
+    outputs = layers.Conv2D(filters=num_classes,
+                            kernel_size=1, activation='sigmoid')(outputs)
 
     model = keras.Model(inputs, outputs)
 
@@ -83,15 +85,18 @@ if __name__ == "__main__":
     image_shape = (256, 256, 1)
 
     model = unet(inputs_shape=image_shape)
-    model.compile(
-        optimizer='adam',
-        loss='binary_crossentropy',
-        metrics=['accuracy']
-    )
 
-    X = np.random.rand(1, *image_shape)
-    y = np.random.rand(1, *image_shape)
-
-    model.fit(X, y)
+    model.build((1, *image_shape))
 
     model.summary()
+
+    # model.compile(
+    #     optimizer='adam',
+    #     loss='binary_crossentropy',
+    #     metrics=['accuracy']
+    # )
+
+    # X = np.random.rand(1, *image_shape)
+    # y = np.random.rand(1, *image_shape)
+
+    # model.fit(X, y)

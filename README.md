@@ -40,7 +40,8 @@ Implementation of Unet from scratch.
 
 ```
 pip install -r requirements.txt
-python UNet_[Functional/Model_subclass].py
 ```
+
+- Refer to Train-Unet notebook
 
 
